@@ -22,7 +22,7 @@ BREAK_LENGTH = (10, 20)      # seconds
 WAIT_AFTER_RETRY = 5  # seconds to wait after clicking Retry before checking for the next button
 WAIT_AFTER_CLICK = 0.5  # seconds to wait after clicking a button before checking for the next button
 SKIP = True  # skip battles
-
+RETRIES = 3
 
 DEV = True                      # take screenshots for debugging
 
@@ -47,7 +47,6 @@ def main():
         service = AutoGuiService(MainScreenFinder(), dev=DEV) 
     else:
         service = AutoGuiService(MultipleMonitorFinder(monitor=MONITOR, dev=DEV), dev=DEV)
-        # service = AutoGuiService(MultipleMonitorFinder(0, dev=DEV), dev=DEV)
 
     while runs < MAX_RUNS:
         # if(DEV):
@@ -70,22 +69,31 @@ def main():
             print("Copy button found, clicking...")
             service.click_in_box(boxCopy, wait_after_click=WAIT_AFTER_CLICK)
 
-        boxAutobattle = service.find_button(buttonAutobattle)
-        if boxAutobattle:
-            print("Autobattle button found, clicking...")
-            service.click_in_box(boxAutobattle, wait_after_click=WAIT_AFTER_CLICK)
+        if not SKIP:
+            boxAutobattle = service.find_button(buttonAutobattle)
+            if boxAutobattle:
+                print("Autobattle button found, clicking...")
+                service.click_in_box(boxAutobattle, wait_after_click=WAIT_AFTER_CLICK)
 
         if SKIP:
-            boxSkip = service.find_button(Button(f"{BASE_PATH}/skip-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION))
-            if boxSkip:
-                print("Skip button found, clicking...")
-                service.click_in_box(boxSkip, wait_after_click=WAIT_AFTER_CLICK)
+            boxBattle = service.find_button(Button(f"{BASE_PATH}/battle-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION))
+            if boxBattle:
+                print("Battle button found, clicking...")
+                service.click_in_box(boxBattle, wait_after_click=WAIT_AFTER_CLICK)
 
+            time.sleep(2)  # Wait for 2 seconds before checking for the skip button
+            for _ in range(RETRIES):
+                time.sleep(1)
+                boxSkip = service.find_button(Button(f"{BASE_PATH}/skip-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=0.8, resolution=RESOLUTION))
+                if boxSkip:
+                    print("Skip button found, clicking...")
+                    service.click_in_box(boxSkip, wait_after_click=WAIT_AFTER_CLICK)
+                    break  # Exit the retry loop if the skip button is found and clicked
 
         runs += 1
         end_iteration(runs)
         low, high = CHECK_INTERVAL
-        wait_time = random.uniform(low / 3, high / 3) if SKIP else random.uniform(low, high)
+        wait_time = random.uniform(low / 5, high / 5) if SKIP else random.uniform(low, high)
         time.sleep(wait_time)
 
     print("Reached MAX_RUNS, stopping.")
