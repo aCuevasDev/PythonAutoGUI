@@ -1,10 +1,18 @@
 from dataclasses import dataclass
+import sys
+from pathlib import Path
 
 
 @dataclass
 class Settings:
     # Not exposed in the GUI
-    base_path: str = "images" # where to find the button images
+    def app_dir() -> Path:
+        # Folder of the .exe when packaged, folder of the script otherwise
+        if getattr(sys, "frozen", False):
+            return Path(sys.executable).parent
+        return Path(__file__).parent
+    
+    base_path: str = str(app_dir() / "images") # where to find the button images
     resolution: tuple = (1280, 720) # game resolution to check for
     debug: bool = False 
 
@@ -26,3 +34,4 @@ class Settings:
     # def image_path(self) -> str:
     #     w, h = self.resolution
     #     return f"{self.base_path}/{self.image}-{w}x{h}.png"
+
