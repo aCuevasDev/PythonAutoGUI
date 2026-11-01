@@ -115,6 +115,7 @@ class RetryBot:
 
         if not s.skip:
             self._try_click(service, "autobattle", s.wait_after_click)
+            self._try_click(service, "autobattlecomplete", s.wait_after_click)
             return
         
         # if skip is enabled, click the battle button and then the skip button (if it appears)
