@@ -18,6 +18,7 @@ class Settings:
 
     # Exposed in the GUI
     confidence: float = 0.9 # lower if it misses, raise if it misclicks
+    confidence_battle_phantimal: float = 0.65
     max_runs: int = 50 # stop after this many iterations
     check_interval: tuple = (5, 10) # seconds between screen checks
     after_run_delay: tuple = (3.0, 6.0) # pause after each run

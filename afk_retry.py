@@ -109,7 +109,8 @@ class RetryBot:
             if s.mode == "Phantimal Challenge"
             else "battlestages"
         )
-        self._try_click(service, mode_button, s.wait_after_retry, confidence=0.7)
+        if not self._try_click(service, mode_button, s.wait_after_retry, confidence=s.confidence_battle_phantimal):
+            self._try_click(service, mode_button+"2", s.wait_after_retry, confidence=s.confidence_battle_phantimal) # retries with a second image if the first one fails
 
         for name, wait in (
             ("retry", s.wait_after_retry),
