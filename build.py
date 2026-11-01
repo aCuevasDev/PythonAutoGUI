@@ -36,6 +36,7 @@ def main():
         "--distpath", str(DIST),
         "--workpath", str(BUILD),
         "--specpath", str(BUILD),
+        "--uac-admin",  # request admin privileges on Windows
         str(ENTRY),
     ]
     if not args.console:
