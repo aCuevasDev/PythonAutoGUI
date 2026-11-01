@@ -1,5 +1,6 @@
 import random
-import time
+import threading
+from typing import Callable
 
 import pyautogui
 
@@ -8,106 +9,154 @@ from button import Button
 from find_monitor_service import find_monitor_of_window
 from main_screen_finder import MainScreenFinder
 from multiple_monitor_finder import MultipleMonitorFinder
+from settings import Settings
 
-# ---- Settings ----
-BASE_PATH = "images"          # where to find the button images
-# IMAGE = "retry"          # tight crop of the Retry button
-RESOLUTION = (1280, 720)      # screen resolution to check for
-CONFIDENCE = 0.9            # lower if it misses, raise if it misclicks
-MAX_RUNS = 50                # stop after this many retries
-CHECK_INTERVAL = (20, 30)  # seconds between screen checks
-AFTER_CLICK_DELAY = (3.0, 6.0)  # pause after clicking (fight loading)
-BREAK_EVERY = (15, 25)       # take a longer break every N-M runs
-BREAK_LENGTH = (10, 20)      # seconds
-WAIT_AFTER_RETRY = 5  # seconds to wait after clicking Retry before checking for the next button
-WAIT_AFTER_CLICK = 0.5  # seconds to wait after clicking a button before checking for the next button
-SKIP = True  # skip battles
-RETRIES = 3
 
-DEV = True                      # take screenshots for debugging
-
-pyautogui.FAILSAFE = True    # move mouse to a screen corner to abort
+pyautogui.FAILSAFE = True  # move mouse to a screen corner to abort
 pyautogui.PAUSE = 0
 
-def testing():
-    print("Testing mode: taking a screenshot of the current screen.")
-    pyautogui.screenshot("full.png")
 
+class RetryBot:
+    """Runs the retry loop in a background thread. Settings are read live."""
+
+    def __init__(
+        self,
+        settings: Settings,
+        log: Callable[[str], None] = print,
+        on_finished: Callable[[], None] = lambda: None,
+    ):
+        self.settings = settings
+        self.runs = 0
+        self._log = log
+        self._on_finished = on_finished
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    # ---------- control ----------
+    @property
+    def running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
+    def start(self):
+        if self.running:
+            return
+        self._stop.clear()
+        self.runs = 0
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+
+    def join(self, timeout: float | None = None):
+        if self._thread:
+            self._thread.join(timeout)
+
+    # ---------- loop ----------
+    def _run(self):
+        s = self.settings
+        try:
+            monitor = find_monitor_of_window(s.window_title.strip())
+            if monitor is None:
+                self._log(f'"{s.window_title.strip()}" window not found (or minimized)')
+                return
+
+            if monitor == 1:
+                finder = MainScreenFinder()
+            else:
+                finder = MultipleMonitorFinder(monitor=monitor, dev=s.debug)
+            service = AutoGuiService(finder, dev=s.debug)
+
+            self._log(f"Started on monitor {monitor}")
+            next_break = random.randint(*s.break_every)
+
+            while self.runs < s.max_runs and not self._stop.is_set():
+                self._log(f"Run #{self.runs + 1}")
+                self._iteration(service)
+                if self._stop.is_set():
+                    break
+                self.runs += 1
+
+                if self.runs >= next_break:
+                    pause = random.uniform(*s.break_length)
+                    self._log(f"Break for {pause:.0f}s")
+                    if self._stop.wait(pause):
+                        break
+                    next_break = self.runs + random.randint(*s.break_every)
+                elif self._stop.wait(random.uniform(*s.after_run_delay)):
+                    break
+
+                low, high = s.check_interval
+                wait = random.uniform(low / 5, high / 5) if s.skip else random.uniform(low, high)
+                if self._stop.wait(wait):
+                    break
+
+            self._log("Reached max runs" if self.runs >= s.max_runs else "Stopped")
+        except pyautogui.FailSafeException:
+            self._log("Failsafe triggered (mouse in a corner), stopped")
+        except Exception as e:
+            self._log(f"Error: {e}")
+        finally:
+            self._on_finished()
+
+    def _iteration(self, service: AutoGuiService):
+        s = self.settings
+
+        for name, wait in (
+            ("retry", s.wait_after_retry),
+            ("records", s.wait_after_click),
+            ("copy", s.wait_after_click),
+        ):
+            if self._stop.is_set():
+                return
+            self._try_click(service, name, wait)
+
+        if not s.skip:
+            self._try_click(service, "autobattle", s.wait_after_click)
+            return
+        
+        # if skip is enabled, click the battle button and then the skip button (if it appears)
+        self._try_click(service, "battle", s.wait_after_click)
+        if self._stop.wait(2):  # give the skip button time to appear
+            return
+        for _ in range(s.retries):
+            if self._stop.wait(1):
+                return
+            if self._try_click(service, "skip", s.wait_after_click):
+                break
+
+    def _try_click(
+        self,
+        service: AutoGuiService,
+        name: str,
+        wait: float,
+    ) -> bool:
+        s = self.settings
+        w, h = s.resolution
+        button = Button(
+            f"{s.base_path}/{name}-{w}x{h}.png",
+            confidence=s.confidence,
+            resolution=s.resolution,
+        )
+        box = service.find_button(button)
+        if not box:
+            self._log(f"{name} not found")
+            return False
+        self._log(f"{name} found, clicking")
+        service.click_in_box(box, wait_after_click=wait)
+        return True
 
 
 def main():
-    runs = 0
-    MONITOR = find_monitor_of_window("AFK Journey") # 1 = primary, 2 = second monitor...
-    buttonRetry = Button(f"{BASE_PATH}/retry-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
-    buttonAutobattle = Button(f"{BASE_PATH}/autobattle-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
-    buttonRecords = Button(f"{BASE_PATH}/records-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
-    buttonCopy = Button(f"{BASE_PATH}/copy-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
-
-    if MONITOR == 1:
-        service = AutoGuiService(MainScreenFinder(), dev=DEV) 
-    else:
-        service = AutoGuiService(MultipleMonitorFinder(monitor=MONITOR, dev=DEV), dev=DEV)
-
-    while runs < MAX_RUNS:
-        # if(DEV):
-        #     testing()
-        print(f"Retry #{runs}")
-
-        retry_box = service.find_button(buttonRetry)
-
-        if retry_box:
-            print("Retry button found, clicking...")
-            service.click_in_box(retry_box, wait_after_click=WAIT_AFTER_RETRY)
-
-        boxRecords = service.find_button(buttonRecords)
-        if boxRecords:
-            print("Records button found, clicking...")
-            service.click_in_box(boxRecords, wait_after_click=WAIT_AFTER_CLICK)
-
-        boxCopy = service.find_button(buttonCopy)
-        if boxCopy:
-            print("Copy button found, clicking...")
-            service.click_in_box(boxCopy, wait_after_click=WAIT_AFTER_CLICK)
-
-        if not SKIP:
-            boxAutobattle = service.find_button(buttonAutobattle)
-            if boxAutobattle:
-                print("Autobattle button found, clicking...")
-                service.click_in_box(boxAutobattle, wait_after_click=WAIT_AFTER_CLICK)
-
-        if SKIP:
-            boxBattle = service.find_button(Button(f"{BASE_PATH}/battle-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION))
-            if boxBattle:
-                print("Battle button found, clicking...")
-                service.click_in_box(boxBattle, wait_after_click=WAIT_AFTER_CLICK)
-
-            time.sleep(2)  # Wait for 2 seconds before checking for the skip button
-            for _ in range(RETRIES):
-                time.sleep(1)
-                boxSkip = service.find_button(Button(f"{BASE_PATH}/skip-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=0.8, resolution=RESOLUTION))
-                if boxSkip:
-                    print("Skip button found, clicking...")
-                    service.click_in_box(boxSkip, wait_after_click=WAIT_AFTER_CLICK)
-                    break  # Exit the retry loop if the skip button is found and clicked
-
-        runs += 1
-        end_iteration(runs)
-        low, high = CHECK_INTERVAL
-        wait_time = random.uniform(low / 5, high / 5) if SKIP else random.uniform(low, high)
-        time.sleep(wait_time)
-
-    print("Reached MAX_RUNS, stopping.")
-
-def end_iteration(runs: int):
-    next_break = random.randint(*BREAK_EVERY)
-
-    if runs >= next_break:
-        pause = random.uniform(*BREAK_LENGTH)
-        print(f"Break for {pause:.0f}s")
-        time.sleep(pause)
-        next_break = runs + random.randint(*BREAK_EVERY)
-    else:
-        time.sleep(random.uniform(*AFTER_CLICK_DELAY))
+    """Run without the GUI. Ctrl+C to stop."""
+    bot = RetryBot(Settings())
+    bot.start()
+    try:
+        while bot.running:
+            bot.join(0.5)
+    except KeyboardInterrupt:
+        bot.stop()
+        bot.join()
 
 
 if __name__ == "__main__":
