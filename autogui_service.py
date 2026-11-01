@@ -17,12 +17,17 @@ class AutoGuiService:
             print(f"Searching for button: {button.image_path} with confidence {button.confidence} and resolution {button.resolution}")
         return self._find_button_strategy.find_button(button)
 
-    def click_in_box(self, box: Box):
+    def click_in_box(self, box: Box, wait_after_click: float = 0.0):
         # Random point inside the button, staying away from the edges
+        if self._dev:
+            print(f"box: {box}")
         margin_x = box.width * 0.2
         margin_y = box.height * 0.2
         x = random.uniform(box.left + margin_x, box.left + box.width - margin_x)
         y = random.uniform(box.top + margin_y, box.top + box.height - margin_y)
         pyautogui.moveTo(x, y, duration=random.uniform(0.15, 0.5))
         time.sleep(random.uniform(0.05, 0.2))
-        pyautogui.click()
+        pyautogui.mouseDown()
+        time.sleep(random.uniform(0.05, 0.15))
+        pyautogui.mouseUp()
+        time.sleep(wait_after_click)  # wait a bit for the next screen to load
