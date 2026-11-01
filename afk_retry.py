@@ -3,8 +3,9 @@ import time
 
 import pyautogui
 
+from autogui_service import AutoGuiService
 from button import Button
-from pyautogui import Box
+from main_screen_finder import MainScreenFinder
 
 # ---- Settings ----
 BASE_PATH = "images"          # where to find the button images
@@ -32,14 +33,15 @@ def main():
     runs = 0
     next_break = random.randint(*BREAK_EVERY)
     button = Button(f"{BASE_PATH}/{IMAGE}-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
+    service = AutoGuiService(MainScreenFinder(), dev=DEV)
 
     while runs < MAX_RUNS:
         if(DEV):
             testing()
-        box = find_button(button)
+        box = service.find_button(button)
 
         if box:
-            click_in_box(box)
+            service.click_in_box(box)
             runs += 1
             print(f"Retry #{runs}")
 
