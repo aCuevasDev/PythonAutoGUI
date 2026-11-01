@@ -8,7 +8,7 @@ from settings import Settings
 
 # key in Settings, label, minimum allowed, spinbox max, step, unit, integer?
 SINGLES = [
-    ("max_runs", "Max runs", 1, 9999, 1, "", True),
+    ("max_runs", "Max runs", 1, 9999, 10, "", True),
     ("retries", "Skip button retries", 1, 20, 1, "", True),
     ("wait_after_retry", "Wait after Retry", 0, 60, 0.5, "s", False),
     ("wait_after_click", "Wait after click", 0, 60, 0.1, "s", False),
