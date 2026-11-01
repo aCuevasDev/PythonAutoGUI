@@ -51,6 +51,7 @@ class App(tk.Tk):
         self.v_conf = tk.DoubleVar(value=s.confidence)
         self.v_skip = tk.BooleanVar(value=s.skip)
         self.v_title = tk.StringVar(value=s.window_title)
+        self.v_mode = tk.StringVar(value=s.mode)
         self.singles = {
             key: _var(is_int, getattr(s, key))
             for key, _, _, _, _, _, is_int in SINGLES
@@ -62,7 +63,10 @@ class App(tk.Tk):
 
         self._build()
 
-        all_vars = [self.v_conf, self.v_skip, self.v_title, *self.singles.values()]
+        all_vars = [
+            self.v_conf, self.v_skip, self.v_title, self.v_mode,
+            *self.singles.values(),
+        ]
         for pair in self.ranges.values():
             all_vars.extend(pair)
         for var in all_vars:
@@ -87,6 +91,15 @@ class App(tk.Tk):
         ttk.Entry(f, textvariable=self.v_title, width=24).grid(
             row=r, column=1, columnspan=3, sticky="ew", padx=2, 
         )
+        r += 1
+        ttk.Label(f, text="Stage type").grid(row=r, column=0, sticky="w", pady=2)
+        ttk.Combobox(
+            f,
+            textvariable=self.v_mode,
+            values=("Phantimal Challenge", "Battle"),
+            state="readonly",
+            width=21,
+        ).grid(row=r, column=1, columnspan=3, sticky="w", padx=2)
         r += 1
         ttk.Label(f, text="Confidence (lower if it misses, raise if it misclicks)").grid(row=r, column=0, sticky="w", pady=2)
         r += 1
@@ -153,6 +166,7 @@ class App(tk.Tk):
         s.confidence = round(_get(self.v_conf, s.confidence), 2)
         s.skip = _get(self.v_skip, s.skip)
         s.window_title = _get(self.v_title, s.window_title)
+        s.mode = _get(self.v_mode, s.mode)
         for key, _label, minimum, *_rest in SINGLES:
             current = getattr(s, key)
             setattr(s, key, max(minimum, _get(self.singles[key], current)))

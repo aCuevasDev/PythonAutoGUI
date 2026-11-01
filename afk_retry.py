@@ -104,6 +104,13 @@ class RetryBot:
     def _iteration(self, service: AutoGuiService):
         s = self.settings
 
+        mode_button = (
+            "phantimalchallenge"
+            if s.mode == "Phantimal Challenge"
+            else "battlestages"
+        )
+        self._try_click(service, mode_button, s.wait_after_retry, confidence=0.7)
+
         for name, wait in (
             ("retry", s.wait_after_retry),
             ("records", s.wait_after_click),
@@ -133,12 +140,13 @@ class RetryBot:
         service: AutoGuiService,
         name: str,
         wait: float,
+        confidence: float | None = None,
     ) -> bool:
         s = self.settings
         w, h = s.resolution
         button = Button(
             f"{s.base_path}/{name}-{w}x{h}.png",
-            confidence=s.confidence,
+            confidence=confidence if confidence is not None else s.confidence,
             resolution=s.resolution,
         )
         box = service.find_button(button)

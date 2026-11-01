@@ -96,6 +96,7 @@ The PyInstaller spec and work files are generated into `build/`, so nothing outs
 | Setting             | Default       | What it does                                                                                                          |
 | ------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Window title        | `AFK Journey` | Title fragment used to find the game window and its monitor.                                                          |
+| Stage type          | `Battle`      | Selects the Phantimal Challenge or Battle stage tab before starting the battle.                                       |
 | Confidence          | `0.90`        | Image-match threshold (0.5–1.0). Lower it when buttons get missed, raise it when the bot misclicks.                   |
 | Skip battles        | on            | Battle → Skip. Turn it **off** to let battles auto-run instead, e.g. when you're clearing stages rather than farming. |
 | Max runs            | `50`          | Stop after this many iterations.                                                                                      |
@@ -114,7 +115,7 @@ Three values in `settings.py` are deliberately kept out of the GUI: `base_path` 
 1. Find the game window by title and work out which monitor it's on.
 2. Grab that monitor with `mss` — or the whole screen if it's the primary one — and match the button template using OpenCV-backed matching.
 3. Click a random point comfortably inside the matched button.
-4. Repeat the cycle: `retry` → `records` → `copy` → `battle` → `skip`.
+4. Repeat the cycle: `retry` → `records` → `copy` → selected stage tab → `battle` → `skip`.
 5. Wait a random amount between runs, and take a longer break every N–M runs.
 
 Templates live in `images/` and are resolved per resolution as `images/<button>-<width>x<height>.png`.
