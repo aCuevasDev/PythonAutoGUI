@@ -75,6 +75,7 @@ class RetryBot:
             while self.runs < s.max_runs and not self._stop.is_set():
                 self._log(f"Run #{self.runs + 1}")
                 self._iteration(service)
+
                 if self._stop.is_set():
                     break
                 self.runs += 1
@@ -85,10 +86,8 @@ class RetryBot:
                     if self._stop.wait(pause):
                         break
                     next_break = self.runs + random.randint(*s.break_every)
-                elif self._stop.wait(random.uniform(*s.after_run_delay)):
-                    break
 
-                low, high = s.check_interval
+                low, high = (1,1) if self.runs == 1 else s.check_interval # On the first boot it goes faster to setup the game, then it goes to the normal interval. This is to avoid the first run being too long.
                 wait = random.uniform(low / TIME_REDUCED_IF_SKIP, high / TIME_REDUCED_IF_SKIP) if s.skip else random.uniform(low, high)
                 if self._stop.wait(wait):
                     break

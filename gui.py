@@ -15,7 +15,6 @@ SINGLES = [
 ]
 RANGES = [
     ("check_interval", "Check interval (automatically lowered if skip is enabled)", 0.1, 300, 0.5, "s", False),
-    ("after_run_delay", "Delay after run", 0.1, 120, 0.5, "s", False),
     ("break_every", "Break every", 1, 500, 1, "runs", True),
     ("break_length", "Break length", 1, 600, 1, "s", True),
 ]
