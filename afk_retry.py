@@ -15,6 +15,8 @@ from settings import Settings
 pyautogui.FAILSAFE = True  # move mouse to a screen corner to abort
 pyautogui.PAUSE = 0
 
+TIME_REDUCED_IF_SKIP = 5  # reduce wait times by this factor if skip is enabled
+
 
 class RetryBot:
     """Runs the retry loop in a background thread. Settings are read live."""
@@ -87,7 +89,7 @@ class RetryBot:
                     break
 
                 low, high = s.check_interval
-                wait = random.uniform(low / 5, high / 5) if s.skip else random.uniform(low, high)
+                wait = random.uniform(low / TIME_REDUCED_IF_SKIP, high / TIME_REDUCED_IF_SKIP) if s.skip else random.uniform(low, high)
                 if self._stop.wait(wait):
                     break
 
