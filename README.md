@@ -17,15 +17,15 @@ A small Python autoclicker that farms AFK Journey stages for you. It replays the
 - **Human-like behavior** — clicks land on a random point inside each button, mouse movement and press durations vary every time, and all delays are randomized ranges with longer breaks sprinkled in.
 - **Multi-monitor aware** — locates the game window by title, figures out which monitor it lives on, and only searches that screen.
 - **Live settings** — tweak timings, confidence, run limits and more from the GUI while the bot is running.
-- **Failsafe** — slam the mouse into a screen corner to abort instantly.
+- **Failsafe** — press stop to abort instantly.
 
 ## 📋 Requirements
 
-| | |
-| --- | --- |
-| OS | Windows (relies on `pygetwindow`) |
-| Python | 3.10+ — only needed to run from source or build the exe |
-| Game | AFK Journey, windowed, **1280x720**, visible and not minimized |
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
+| OS     | Windows (relies on `pygetwindow`)                              |
+| Python | 3.10+ — only needed to run from source or build the exe        |
+| Game   | AFK Journey, windowed, **1280x720**, visible and not minimized |
 
 ## 💾 Installation
 
@@ -38,7 +38,7 @@ A small Python autoclicker that farms AFK Journey stages for you. It replays the
 > [!IMPORTANT]
 > Keep the `images` folder next to `AFKRetry.exe`. The app looks up its button templates relative to the executable, so moving the exe out of the folder will break detection.
 
-Windows may warn about an unsigned executable — that's expected for PyInstaller builds; choose *More info → Run anyway*.
+Windows may warn about an unsigned executable — that's expected for PyInstaller builds; choose _More info → Run anyway_.
 
 ### From source
 
@@ -84,28 +84,28 @@ dist/AFKRetry.zip            the folder above, zipped for release
 
 `build.py` optional flags:
 
-| Flag | Effect |
-| --- | --- |
+| Flag        | Effect                                                       |
+| ----------- | ------------------------------------------------------------ |
 | `--console` | Keep the terminal window open — handy for seeing tracebacks. |
-| `--no-zip` | Skip creating `AFKRetry.zip`. |
+| `--no-zip`  | Skip creating `AFKRetry.zip`.                                |
 
 The PyInstaller spec and work files are generated into `build/`, so nothing outside `dist/` needs to be kept.
 
 ## ⚙️ Settings
 
-| Setting | Default | What it does |
-| --- | --- | --- |
-| Window title | `AFK Journey` | Title fragment used to find the game window and its monitor. |
-| Confidence | `0.90` | Image-match threshold (0.5–1.0). Lower it when buttons get missed, raise it when the bot misclicks. |
-| Skip battles | on | Battle → Skip. Turn it **off** to let battles auto-run instead, e.g. when you're clearing stages rather than farming. |
-| Max runs | `50` | Stop after this many iterations. |
-| Skip button retries | `3` | How many times to look for Skip before giving up on a battle. |
-| Wait after Retry | `5.0 s` | Pause after Retry so the next screen can load. |
-| Wait after click | `0.5 s` | Pause after every other click. |
-| Check interval | `20–30 s` | Delay between runs. Automatically divided by 5 when **Skip battles** is on. |
-| Delay after run | `3–6 s` | Short pause at the end of each run. |
-| Break every | `15–25 runs` | Take a longer break after this many runs. |
-| Break length | `10–20 s` | How long that break lasts. |
+| Setting             | Default       | What it does                                                                                                          |
+| ------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Window title        | `AFK Journey` | Title fragment used to find the game window and its monitor.                                                          |
+| Confidence          | `0.90`        | Image-match threshold (0.5–1.0). Lower it when buttons get missed, raise it when the bot misclicks.                   |
+| Skip battles        | on            | Battle → Skip. Turn it **off** to let battles auto-run instead, e.g. when you're clearing stages rather than farming. |
+| Max runs            | `50`          | Stop after this many iterations.                                                                                      |
+| Skip button retries | `3`           | How many times to look for Skip before giving up on a battle.                                                         |
+| Wait after Retry    | `5.0 s`       | Pause after Retry so the next screen can load.                                                                        |
+| Wait after click    | `0.5 s`       | Pause after every other click.                                                                                        |
+| Check interval      | `20–30 s`     | Delay between runs. Automatically divided by 5 when **Skip battles** is on.                                           |
+| Delay after run     | `3–6 s`       | Short pause at the end of each run.                                                                                   |
+| Break every         | `15–25 runs`  | Take a longer break after this many runs.                                                                             |
+| Break length        | `10–20 s`     | How long that break lasts.                                                                                            |
 
 Three values in `settings.py` are deliberately kept out of the GUI: `base_path` (template folder), `resolution` (picks the image variant), and `debug` (prints matches and saves `debug_monitor.png`).
 
