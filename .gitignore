@@ -12,5 +12,10 @@ venv/
 # Debug output
 debug_monitor.png
 
+# Build output
+build/
+dist/
+
+
 # Secrets
 .env
