@@ -1,3 +1,5 @@
 pyautogui
 opencv-python
 pillow
+mss
+pygetwindow

@@ -5,6 +5,7 @@ import pyautogui
 
 from autogui_service import AutoGuiService
 from button import Button
+from find_monitor_service import find_monitor_of_window
 from main_screen_finder import MainScreenFinder
 from multiple_monitor_finder import MultipleMonitorFinder
 
@@ -18,9 +19,9 @@ CHECK_INTERVAL = (20, 30)  # seconds between screen checks
 AFTER_CLICK_DELAY = (3.0, 6.0)  # pause after clicking (fight loading)
 BREAK_EVERY = (15, 25)       # take a longer break every N-M runs
 BREAK_LENGTH = (10, 20)      # seconds
-MONITOR = 2  # 1 = primary, 2 = second monitor...
 WAIT_AFTER_RETRY = 5  # seconds to wait after clicking Retry before checking for the next button
 WAIT_AFTER_CLICK = 0.5  # seconds to wait after clicking a button before checking for the next button
+SKIP = True  # skip battles
 
 
 DEV = True                      # take screenshots for debugging
@@ -36,6 +37,7 @@ def testing():
 
 def main():
     runs = 0
+    MONITOR = find_monitor_of_window("AFK Journey") # 1 = primary, 2 = second monitor...
     buttonRetry = Button(f"{BASE_PATH}/retry-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
     buttonAutobattle = Button(f"{BASE_PATH}/autobattle-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
     buttonRecords = Button(f"{BASE_PATH}/records-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION)
@@ -50,6 +52,7 @@ def main():
     while runs < MAX_RUNS:
         # if(DEV):
         #     testing()
+        print(f"Retry #{runs}")
 
         retry_box = service.find_button(buttonRetry)
 
@@ -72,12 +75,18 @@ def main():
             print("Autobattle button found, clicking...")
             service.click_in_box(boxAutobattle, wait_after_click=WAIT_AFTER_CLICK)
 
+        if SKIP:
+            boxSkip = service.find_button(Button(f"{BASE_PATH}/skip-{RESOLUTION[0]}x{RESOLUTION[1]}.png", confidence=CONFIDENCE, resolution=RESOLUTION))
+            if boxSkip:
+                print("Skip button found, clicking...")
+                service.click_in_box(boxSkip, wait_after_click=WAIT_AFTER_CLICK)
+
 
         runs += 1
-        print(f"Retry #{runs}")
         end_iteration(runs)
-
-        time.sleep(random.uniform(*CHECK_INTERVAL))
+        low, high = CHECK_INTERVAL
+        wait_time = random.uniform(low / 3, high / 3) if SKIP else random.uniform(low, high)
+        time.sleep(wait_time)
 
     print("Reached MAX_RUNS, stopping.")
 
