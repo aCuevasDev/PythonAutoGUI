@@ -14,7 +14,7 @@ SINGLES = [
     ("wait_after_click", "Wait after click", 0, 60, 0.1, "s", False),
 ]
 RANGES = [
-    ("check_interval", "Check interval", 0.1, 300, 0.5, "s", False),
+    ("check_interval", "Check interval (automatically lowered if skip is enabled)", 0.1, 300, 0.5, "s", False),
     ("after_run_delay", "Delay after run", 0.1, 120, 0.5, "s", False),
     ("break_every", "Break every", 1, 500, 1, "runs", True),
     ("break_length", "Break length", 1, 600, 1, "s", True),
@@ -88,15 +88,16 @@ class App(tk.Tk):
             row=r, column=1, columnspan=3, sticky="ew", padx=2, 
         )
         r += 1
-        ttk.Label(f, text="Confidence").grid(row=r, column=0, sticky="w", pady=2)
+        ttk.Label(f, text="Confidence (lower if it misses, raise if it misclicks)").grid(row=r, column=0, sticky="w", pady=2)
+        r += 1
         ttk.Scale(f, from_=0.5, to=1.0, variable=self.v_conf, length=150).grid(
-            row=r, column=1, columnspan=2, sticky="ew", padx=2
+            row=r, column=0, columnspan=2, sticky="ew", padx=2
         )
         self.lbl_conf = ttk.Label(f, width=5)
         self.lbl_conf.grid(row=r, column=3, sticky="w")
         r += 1
 
-        ttk.Checkbutton(f, text="Skip battles", variable=self.v_skip).grid(
+        ttk.Checkbutton(f, text="Skip battles (Turn false if running stages)", variable=self.v_skip).grid(
             row=r, column=0, columnspan=4, sticky="w", pady=2
         )
         r += 1
