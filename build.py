@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent
 APP_NAME = "AFKRetry"
 ENTRY = ROOT / "gui.py"
 IMAGES = ROOT / "images"
+CONFIG = ROOT / "settings.toml"
 DIST = ROOT / "dist"
 BUILD = ROOT / "build"
 
@@ -27,6 +28,8 @@ def main():
 
     if not IMAGES.is_dir():
         sys.exit(f"images folder not found: {IMAGES}")
+    if not CONFIG.is_file():
+        sys.exit(f"settings file not found: {CONFIG}")
 
     # sys.executable makes sure the venv's PyInstaller is used
     cmd = [
@@ -51,6 +54,9 @@ def main():
         shutil.rmtree(target)
     shutil.copytree(IMAGES, target)
     print(f"Copied images to {target}")
+
+    shutil.copy(CONFIG, app_dir / CONFIG.name)
+    print(f"Copied settings to {app_dir / CONFIG.name}")
 
     if not args.no_zip:
         archive = shutil.make_archive(str(DIST / APP_NAME), "zip", root_dir=DIST, base_dir=APP_NAME)

@@ -1,35 +1,43 @@
-from dataclasses import dataclass
 import sys
+import tomllib
+from dataclasses import dataclass
 from pathlib import Path
+
+
+def app_dir() -> Path:
+    # Folder of the .exe when packaged, folder of the script otherwise
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
+CONFIG_PATH = app_dir() / "settings.toml"
+
+with CONFIG_PATH.open("rb") as f:
+    _config = tomllib.load(f)
 
 
 @dataclass
 class Settings:
     # Not exposed in the GUI
-    def app_dir() -> Path:
-        # Folder of the .exe when packaged, folder of the script otherwise
-        if getattr(sys, "frozen", False):
-            return Path(sys.executable).parent
-        return Path(__file__).parent
-    
-    base_path: str = str(app_dir() / "images") # where to find the button images
-    resolution: tuple = (1280, 720) # game resolution to check for
-    debug: bool = False 
+    base_path: str = str(app_dir() / _config["app"]["base_path"])
+    resolution: tuple = tuple(_config["app"]["resolution"])
+    debug: bool = _config["app"]["debug"]
 
     # Exposed in the GUI
-    confidence: float = 0.9 # lower if it misses, raise if it misclicks
-    confidence_battle_phantimal: float = 0.65
-    max_runs: int = 50 # stop after this many iterations
-    check_interval: tuple = (5, 10) # seconds between screen checks
-    after_run_delay: tuple = (3.0, 6.0) # pause after each run
-    break_every: tuple = (15, 25) # take a longer break every N-M runs
-    break_length: tuple = (10, 20) # seconds
-    wait_after_retry: float = 5.0 # seconds to wait after clicking Retry before checking for the next button
-    wait_after_click: float = 0.5 # seconds to wait after clicking a button before checking for the next button
-    skip: bool = False # skip battles
-    mode: str = "Battle" # stage type to select
-    retries: int = 3 # number of retries for finding the skip button
-    window_title: str = "AFK Journey" # title of the game window to find the monitor for
+    confidence: float = _config["options"]["confidence"]
+    confidence_battle_phantimal: float = _config["options"]["confidence_battle_phantimal"]
+    max_runs: int = _config["options"]["max_runs"]
+    check_interval: tuple = tuple(_config["options"]["check_interval"])
+    after_run_delay: tuple = tuple(_config["options"]["after_run_delay"])
+    break_every: tuple = tuple(_config["options"]["break_every"])
+    break_length: tuple = tuple(_config["options"]["break_length"])
+    wait_after_retry: float = _config["options"]["wait_after_retry"]
+    wait_after_click: float = _config["options"]["wait_after_click"]
+    skip: bool = _config["options"]["skip"]
+    mode: str = _config["options"]["mode"]
+    retries: int = _config["options"]["retries"]
+    window_title: str = _config["options"]["window_title"]
 
     # Out of scope for now
     # @property

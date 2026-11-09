@@ -1,6 +1,6 @@
 # AFK Journey Auto Retry
 
-![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-windows-lightgrey)
 
 A small Python autoclicker that farms AFK Journey stages for you. It replays the stage in a loop by copying a formation from the Records screen, and it fakes human input with randomized timings and click positions so the activity doesn't look like a script.
@@ -24,7 +24,7 @@ A small Python autoclicker that farms AFK Journey stages for you. It replays the
 |        |                                                                |
 | ------ | -------------------------------------------------------------- |
 | OS     | Windows (relies on `pygetwindow`)                              |
-| Python | 3.10+ — only needed to run from source or build the exe        |
+| Python | 3.11+ — only needed to run from source or build the exe        |
 | Game   | AFK Journey, windowed, **1280x720**, visible and not minimized |
 
 ## 💾 Installation
@@ -36,7 +36,7 @@ A small Python autoclicker that farms AFK Journey stages for you. It replays the
 3. Run `AFKRetry.exe`.
 
 > [!IMPORTANT]
-> Keep the `images` folder next to `AFKRetry.exe`. The app looks up its button templates relative to the executable, so moving the exe out of the folder will break detection.
+> Keep the `images` folder and `settings.toml` next to `AFKRetry.exe`. The app looks up its button templates and settings relative to the executable, so moving the exe out of the folder will break detection or startup.
 
 Windows may warn about an unsigned executable — that's expected for PyInstaller builds; choose _More info → Run anyway_.
 
@@ -61,7 +61,7 @@ Launch `AFKRetry.exe` (or `python gui.py`). Point **Window title** at your game 
 
 ### Headless
 
-Runs with default settings until you hit Ctrl+C:
+Runs with the settings from `settings.toml` until you hit Ctrl+C:
 
 ```bash
 python afk_retry.py
@@ -79,6 +79,7 @@ The build produces:
 ```
 dist/AFKRetry/AFKRetry.exe   the app
 dist/AFKRetry/images/        button templates, copied automatically
+dist/AFKRetry/settings.toml  settings, copied automatically
 dist/AFKRetry.zip            the folder above, zipped for release
 ```
 
@@ -93,22 +94,24 @@ The PyInstaller spec and work files are generated into `build/`, so nothing outs
 
 ## ⚙️ Settings
 
+All defaults live in `settings.toml`, which is read once at startup. Edit it to change the values the app starts with; changes made in the GUI apply to the current session only.
+
 | Setting             | Default       | What it does                                                                                                          |
 | ------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
 | Window title        | `AFK Journey` | Title fragment used to find the game window and its monitor.                                                          |
 | Stage type          | `Battle`      | Selects the Phantimal Challenge or Battle stage tab before starting the battle.                                       |
-| Confidence          | `0.90`        | Image-match threshold (0.5–1.0). Lower it when buttons get missed, raise it when the bot misclicks.                   |
-| Skip battles        | on            | Battle → Skip. Turn it **off** to let battles auto-run instead, e.g. when you're clearing stages rather than farming. |
-| Max runs            | `50`          | Stop after this many iterations.                                                                                      |
+| Confidence          | `0.85`        | Image-match threshold (0.5–1.0). Lower it when buttons get missed, raise it when the bot misclicks.                   |
+| Skip battles        | off           | Battle → Skip. Turn it **on** to skip battles instead of letting them auto-run.                                       |
+| Max runs            | `100`         | Stop after this many iterations.                                                                                      |
 | Skip button retries | `3`           | How many times to look for Skip before giving up on a battle.                                                         |
 | Wait after Retry    | `5.0 s`       | Pause after Retry so the next screen can load.                                                                        |
-| Wait after click    | `0.5 s`       | Pause after every other click.                                                                                        |
-| Check interval      | `20–30 s`     | Delay between runs. Automatically divided by 5 when **Skip battles** is on.                                           |
+| Wait after click    | `0.7 s`       | Pause after every other click.                                                                                        |
+| Check interval      | `5–10 s`      | Delay between runs. Automatically divided by 5 when **Skip battles** is on.                                           |
 | Delay after run     | `3–6 s`       | Short pause at the end of each run.                                                                                   |
 | Break every         | `15–25 runs`  | Take a longer break after this many runs.                                                                             |
 | Break length        | `10–20 s`     | How long that break lasts.                                                                                            |
 
-Three values in `settings.py` are deliberately kept out of the GUI: `base_path` (template folder), `resolution` (picks the image variant), and `debug` (prints matches and saves `debug_monitor.png`).
+The `[app]` section is deliberately kept out of the GUI: `base_path` (template folder), `resolution` (picks the image variant), and `debug` (prints matches and saves `debug_monitor.png`). The `[options]` section is what the GUI exposes.
 
 ## 🔍 How it works
 
@@ -124,14 +127,15 @@ Templates live in `images/` and are resolved per resolution as `images/<button>-
 <tr><td><b>File</b></td><td><b>Role</b></td></tr>
 <tr><td><code>gui.py</code></td><td>Tkinter GUI and main entry point</td></tr>
 <tr><td><code>afk_retry.py</code></td><td>Bot loop (<code>RetryBot</code>) and headless entry point</td></tr>
-<tr><td><code>settings.py</code></td><td>Settings dataclass with every default</td></tr>
+<tr><td><code>settings.toml</code></td><td>Settings defaults, read at startup</td></tr>
+<tr><td><code>settings.py</code></td><td>Loads <code>settings.toml</code> into the <code>Settings</code> dataclass</td></tr>
 <tr><td><code>autogui_service.py</code></td><td>Find + click helpers with randomized input</td></tr>
 <tr><td><code>button.py</code></td><td>Button value object (image path, confidence)</td></tr>
 <tr><td><code>find_button_strategy.py</code></td><td>Abstract strategy for locating buttons</td></tr>
 <tr><td><code>main_screen_finder.py</code></td><td>Strategy for the primary monitor</td></tr>
 <tr><td><code>multiple_monitor_finder.py</code></td><td>Strategy for secondary monitors</td></tr>
 <tr><td><code>find_monitor_service.py</code></td><td>Window title → monitor index</td></tr>
-<tr><td><code>build.py</code></td><td>Packaging script: PyInstaller build, image copy, zip</td></tr>
+<tr><td><code>build.py</code></td><td>Packaging script: PyInstaller build, image and settings copy, zip</td></tr>
 </table>
 
 ## ⚠️ Limitations

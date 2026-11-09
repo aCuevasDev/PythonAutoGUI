@@ -1,0 +1,36 @@
+# AFK Retry settings
+
+[app]
+# Folder with the button images, relative to the app folder
+base_path = "images"
+# Game resolution, used to pick the image variant
+resolution = [1280, 720]
+# Print matches and save debug_monitor.png
+debug = false
+
+[options]
+# Lower if it misses, raise if it misclicks
+confidence = 0.85
+confidence_battle_phantimal = 0.60
+# Stop after this many iterations
+max_runs = 250
+# Seconds between screen checks
+check_interval = [3, 7]
+# Pause after each run
+after_run_delay = [3.0, 6.0]
+# Take a longer break every N-M runs
+break_every = [15, 25]
+# Break length in seconds
+break_length = [10, 20]
+# Seconds to wait after clicking Retry before checking for the next button
+wait_after_retry = 5.0
+# Seconds to wait after clicking a button before checking for the next button
+wait_after_click = 0.7
+# Skip battles
+skip = false
+# Stage type to select
+mode = "Battle"
+# Number of retries for finding the skip button
+retries = 3
+# Title of the game window to find the monitor for
+window_title = "AFK Journey"
